@@ -43,4 +43,7 @@ class Enemy(turtle.Turtle):
         if (time.time() - self.start_timer > self.turning_period):
             self.left(random.uniform(-self.max_turn_angle, self.max_turn_angle))
             self.start_timer = time.time()
+    
+    def is_out_of_bounds(self, w,h):
+        return (abs(self.ycor()) > h/2 or abs(self.xcor()) > w/2)
         

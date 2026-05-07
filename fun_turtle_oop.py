@@ -7,6 +7,17 @@ import turtle
 
 from aliens import Enemy
 
+
+def turn_left():
+    player.rotation = player_rot_step
+
+def turn_right():
+    player.rotation = -player_rot_step
+
+def stop_turning():
+    player.rotation = 0
+
+
 #General setup
 w = 600
 h = 600
@@ -29,15 +40,6 @@ player.shapesize(stretch_len=1.5)
 player.color("purple")
 
 player.rotation = 0
-
-def turn_left():
-    player.rotation = player_rot_step
-
-def turn_right():
-    player.rotation = -player_rot_step
-
-def stop_turning():
-    player.rotation = 0
 
 screen.onkeypress(turn_left, 'Left')
 screen.onkeyrelease(stop_turning, 'Left')
@@ -72,6 +74,7 @@ while True:
             enemy.hideturtle()
             screen.update()
             enemies.remove(enemy)
+            turtle.turtles().remove(enemy)
     screen.update()
         
         
