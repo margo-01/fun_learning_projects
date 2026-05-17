@@ -10,7 +10,7 @@ class OutOfBoundsMixin:
             or abs(self.ycor()) > screen_height / 2
         )
 class Enemy(turtle.Turtle, OutOfBoundsMixin):
-    SPEED_RANGE = 0.1, 3
+    SPEED_RANGE = 0.1, 1
     MAX_TURN_ANGLE = 90
     TURNING_PERIOD_RANGE = 0.5, 2
     def __init__(self):

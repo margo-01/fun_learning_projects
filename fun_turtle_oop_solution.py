@@ -4,14 +4,14 @@ import random
 import time
 import turtle
 
-from game_entities import Enemy, Laser
+from aliens_solution import Enemy, Laser
 
 WIDTH = 600
 HEIGHT = 600
 
-player_rotation_step = 3
+player_rotation_step = 0.5
 spawn_interval_range = 1, 3
-laser_speed = 15
+laser_speed = 1
 total_ammunition = 100
 
 # Initialise variables
