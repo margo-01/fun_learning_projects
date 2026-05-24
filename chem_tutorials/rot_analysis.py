@@ -1,9 +1,10 @@
 # Rotational analysis
 import numpy as np
 
+
+from molmass import ELEMENTS
 from scipy import constants
 from scipy.constants import physical_constants
-from molmass import ELEMENTS
 
 
 E_h = physical_constants["Hartree energy"][0]
@@ -15,6 +16,8 @@ kilo = constants.kilo
 centi = constants.centi
 angstrom = constants.angstrom
 mega = constants.mega
+
+
 
 class RotationalAnalysis:
     def __init__(self, molecule):

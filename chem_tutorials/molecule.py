@@ -4,7 +4,6 @@
 
 import numpy as np
 from molmass import ELEMENTS
-from rot_analysis import RotationalAnalysis
 
 
 class Molecule: 
@@ -25,7 +24,7 @@ class Molecule:
                     n_at = line.strip()
                 else:
                     l = line.strip().split()
-                    z_at.append(l[0])
+                    z_at.append(int(float(l[0])))
                     coords.append(l[1:4])
                 count += 1 
 
@@ -239,12 +238,7 @@ class Molecule:
 
 #%%
 
-if __name__ == '__main__':
-    chome = Molecule()
-    chome.open_structure_dat("acetaldehyde.dat")
-           
-    rot_results = RotationalAnalysis(chome)
-    rot_results.display_moment_of_interia()
-    rot_results.rotational_constants()
+
+
 #%%       
 
