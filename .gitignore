@@ -1,2 +1,2 @@
-.\__pycache__
-.\chem_tutorials\__pycache__
+__pycache__/
+*.py[cod]
