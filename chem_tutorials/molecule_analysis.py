@@ -35,3 +35,5 @@ if __name__ == '__main__':
 
     
     C_test = hf_results.fock_diag(D_tmp)
+    
+    D_test = hf_results.D_mu_nu_mat(C_test)

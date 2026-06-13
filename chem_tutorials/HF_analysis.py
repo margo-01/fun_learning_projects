@@ -91,7 +91,16 @@ class HFAnalysis:
         self.C_mat = C_mat
         return C_mat
     
-        
+    def D_mu_nu_mat(self, coeff_mat):
+        D_mat = np.zeros((len(coeff_mat), len(coeff_mat)))
+        for mu in range(len(coeff_mat)): #
+            for nu in range(len(coeff_mat)):
+                D_mat[mu,nu] += 2*(np.sum(coeff_mat[mu, 0:int(self.molecue.n_mo_occ)]*coeff_mat[nu, 0 :int(self.molecue.n_mo_occ)]))
+        return D_mat
+                
+    
+    def update_D_mu_nu_mat(self, coeff):
+        pass
         
 
         

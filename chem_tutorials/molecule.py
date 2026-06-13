@@ -37,6 +37,7 @@ class Molecule:
             mol_mass.append(e.mass)
         m_total = np.sum(mol_mass)
         
+        self.n_mo_occ = np.sum(z_at)/2 #valid only for closed shell systems        
         self.mol_mass = mol_mass
         self.m_total = m_total
         self.coord_at = np.array(coords,dtype=float)
@@ -226,6 +227,7 @@ class Molecule:
                             if tau_val == True:
                                 tau = self.dihedral_angle( i, j, k, l)
                                 print(f'Atom #{i} - #{j} - #{k} - #{l} : {tau}')
+    
     
     
 
