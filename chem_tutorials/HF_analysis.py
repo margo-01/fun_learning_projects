@@ -13,7 +13,8 @@ class HFAnalysis:
     def load_enuc(self, filename):
         with open(self.data_path/filename, 'r') as f:
             for line in f:
-                    E_nuc = line.strip()
+                    E_nuc = float(line.strip())
+                    
         self.E_nuc = E_nuc
 
     
@@ -56,7 +57,7 @@ class HFAnalysis:
         s_diag = U @ np.diagflat(LAM**(-0.5)) @ np.transpose(U)
         self.S_diag = s_diag
       
-    def fock_mat(self, D_tmp):
+    def fock_mat(self):
         
         self.build_hcore()
  
@@ -67,10 +68,10 @@ class HFAnalysis:
     
         for mu in range(self.basis_size):
             for nu in range(self.basis_size):
-                J_mat[mu, nu] = (eri_mat[mu,nu] * D_tmp).sum()
+                J_mat[mu, nu] = (eri_mat[mu,nu] * self.D_mu_nu_mat).sum()
         for mu in range(self.basis_size):
             for nu in range(self.basis_size):
-                K_mat[mu, nu] = (eri_mat[mu, :, nu, :]*D_tmp).sum()
+                K_mat[mu, nu] = (eri_mat[mu, :, nu, :]*self.D_mu_nu_mat).sum()
         self.J_mat = J_mat
         self.K_mat = K_mat     
         
@@ -79,9 +80,9 @@ class HFAnalysis:
         self.Fock_mat = Fock_mat
         
         
-    def fock_diag(self, D_tmp):
+    def fock_diag(self):
         self.s_diag()
-        self.fock_mat(D_tmp)
+        self.fock_mat()
         
         Fock_diag = self.S_diag @ self.Fock_mat @ self.S_diag
         
@@ -89,18 +90,87 @@ class HFAnalysis:
         C_mat = self.S_diag @ eigvec
          
         self.C_mat = C_mat
-        return C_mat
     
-    def D_mu_nu_mat(self, coeff_mat):
-        D_mat = np.zeros((len(coeff_mat), len(coeff_mat)))
-        for mu in range(len(coeff_mat)): #
-            for nu in range(len(coeff_mat)):
-                D_mat[mu,nu] += 2*(np.sum(coeff_mat[mu, 0:int(self.molecue.n_mo_occ)]*coeff_mat[nu, 0 :int(self.molecue.n_mo_occ)]))
-        return D_mat
+    def D_mat(self):
+        D_mat = np.zeros((len(self.C_mat), len(self.C_mat)))
+        for mu in range(len(self.C_mat)): #
+            for nu in range(len(self.C_mat)):
+                D_mat[mu,nu] += 2*(np.sum(self.C_mat[mu, 0:int(self.molecue.n_mo_occ)]*self.C_mat[nu, 0 :int(self.molecue.n_mo_occ)]))
+        self.D_mu_nu_mat = D_mat
                 
     
-    def update_D_mu_nu_mat(self, coeff):
-        pass
+    def update_D_mu_nu_mat(self):
+            self.fock_diag()
+            self.D_mat()
+
+    def E_total(self):
+        E_e = 0
+        
+        for mu in range(len(self.D_mu_nu_mat)):
+            for nu in range(len(self.D_mu_nu_mat)):
+                E_e += 0.5*(self.D_mu_nu_mat[mu,nu]*(self.hcore_mat[mu,nu]+self.Fock_mat[mu,nu]))
+
+
+        E_tot = E_e +self.E_nuc
+        self.E_tot = E_tot
+        return E_tot
+                
+    def SCF_loop(self):
+        self.D_mu_nu_mat = np.zeros((self.basis_size, self.basis_size))
+        E_tot = 0
+        E_list = []
+        E_conv = False
+        E_rms_conv = False
+        max_iter = 100
+        e_conv_th = 1e-10
+        rmse_conv_th = 1e-8
+        iter_n = 0
+        while E_conv == False and E_rms_conv == False:
+            if iter_n < max_iter:
+                self.update_D_mu_nu_mat()
+                E = self.E_total() 
+                E_list.append(E)
+                E_dif = np.abs(E_tot - E)
+                rms = np.linalg.norm(self.D_mu_nu_mat, 'fro')
+                if E_dif < e_conv_th:
+                    E_conv = True
+                if rms < rmse_conv_th:
+                    E_rms_conv = True
+                print("______________________________________________________________________")
+                print(f"SCF Cycle: {iter_n}, Total Energy: {E}, Delta E: {E_dif}")
+                print(f"RMSE: {rms}, Energy Convergence: {E_conv}, RMS Convergence: {E_rms_conv}")
+                print("______________________________________________________________________")
+                E_tot = E
+                iter_n += 1 
+            else:
+                print("######## MAXIMUM NUMBER OF ITERATIONS REACHED WITHOUT CONVERGENCE ########")
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
 
         
