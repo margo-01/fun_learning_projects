@@ -20,8 +20,6 @@ if __name__ == '__main__':
     #vib_results.eig_mw_hes()
    # vib_results.vib_frec()
     hf_results = HFAnalysis(h2o, './hf_input', 7)
-    hf_results.load_enuc('enuc.dat')
-    hf_results.build_hcore()
     hf_results.SCF_loop()
     
     

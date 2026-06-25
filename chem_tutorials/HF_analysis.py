@@ -59,7 +59,6 @@ class HFAnalysis:
       
     def fock_mat(self):
         
-        self.build_hcore()
  
         eri_mat = self._load_2d_int('eri.dat')
         J_mat = np.zeros((self.basis_size, self.basis_size))
@@ -81,7 +80,7 @@ class HFAnalysis:
         
         
     def fock_diag(self):
-        self.s_diag()
+
         self.fock_mat()
         
         Fock_diag = self.S_diag @ self.Fock_mat @ self.S_diag
@@ -105,7 +104,8 @@ class HFAnalysis:
 
     def E_total(self):
         E_e = 0
-        
+
+            
         for mu in range(len(self.D_mu_nu_mat)):
             for nu in range(len(self.D_mu_nu_mat)):
                 E_e += 0.5*(self.D_mu_nu_mat[mu,nu]*(self.hcore_mat[mu,nu]+self.Fock_mat[mu,nu]))
@@ -117,6 +117,12 @@ class HFAnalysis:
                 
     def SCF_loop(self):
         self.D_mu_nu_mat = np.zeros((self.basis_size, self.basis_size))
+        self.Fock_mat = np.zeros((self.basis_size, self.basis_size))
+        self.load_enuc('enuc.dat')
+        self.build_hcore()
+        self.s_diag()
+        
+        
         E_tot = 0
         E_list = []
         E_conv = False
@@ -125,13 +131,21 @@ class HFAnalysis:
         e_conv_th = 1e-10
         rmse_conv_th = 1e-8
         iter_n = 0
-        while E_conv == False and E_rms_conv == False:
+        
+        while not (E_conv and E_rms_conv):
             if iter_n < max_iter:
-                self.update_D_mu_nu_mat()
+                #need to rebuild the fock matrix here to ensure that the energy calculation is consistent
+                self.fock_mat()
+            
                 E = self.E_total() 
                 E_list.append(E)
                 E_dif = np.abs(E_tot - E)
-                rms = np.linalg.norm(self.D_mu_nu_mat, 'fro')
+
+                D_prev = self.D_mu_nu_mat
+                self.update_D_mu_nu_mat()
+
+                rms = np.linalg.norm((self.D_mu_nu_mat - D_prev), 'fro')
+                del D_prev
                 if E_dif < e_conv_th:
                     E_conv = True
                 if rms < rmse_conv_th:
