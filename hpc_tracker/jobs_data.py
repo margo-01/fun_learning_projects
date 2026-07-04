@@ -12,27 +12,25 @@ class Job:
 
 class JobTracker: 
     def __init__(self):
-        pass
+        self.jobs = []
     
     
     
-    
-    def add_job():
-        jobs = []
+    def job_list(self):
         while True:
-            material = input("Material:")
-            directory = input("Main directory:")
-            comment = input("Comment:")
-            new_job = Job(material=material, directory=Path(directory), comment=comment)
-            jobs.append(new_job)
-            next_job = input("Add another job?  [y/n]")
-            start_over = input("Start over? [y/n]")
-            if start_over.lower() == "y":
-                continue
-            if next_job.lower() == "n":
+            add_new = input("Add another job? [y/n]").strip().lower()
+            if add_new != 'y':
                 break
-            
-        return jobs
+            else: 
+                self.jobs(self.terminal_job())
+        
+    
+    def terminal_job():
+            material = input("Material:").strip()
+            directory = input("Main directory:").strip().expanduser()
+            comment = input("Comment:")
+            new_job = Job(material=material, directory=Path(directory), comment=comment)          
+            return new_job
     
     
     

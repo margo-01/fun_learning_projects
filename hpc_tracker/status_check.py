@@ -17,12 +17,13 @@ def check_CASTEP_output(job):
             for l in frb:
                 if "Peak Memory Use" not in l : 
                     finished = False
+                    warnings.warn(f"Job in directory: {job.directory} called but not finished ")
+
                 else:
                     finished = True
                     #convergence keywords for GO and SP
                 
-        
-
+    
     return run, finished, converged 
 
 
