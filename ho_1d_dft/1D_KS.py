@@ -53,6 +53,7 @@ def V_pot_HO(x):
     for j in range(len(x)):
         V_HO[j,j] = x[j]**2    
     return V_HO
+
 def calculate_density(n_el, x, psi):
     density = np.zeros(len(x))
 
