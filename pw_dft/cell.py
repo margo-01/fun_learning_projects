@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-def make_grid(L: float, npts:int ):
+def make_grid(L: float, npts ):
     d_x = L/npts
     x = np.arange(0, npts)*d_x
     grid_array = np.stack(np.meshgrid(x,x,x, indexing='ij'), axis = -1)
@@ -13,7 +13,7 @@ def make_grid(L: float, npts:int ):
 
 # fix the unit cell to be a cube of length L
 
-def make_gvec(L: float, npts:int):
+def make_gvec(L: float, npts):
     freq = np.fft.fftfreq(npts, 1/npts)
     g = (2*np.pi/L)*freq
     G_vec = np.stack(np.meshgrid(g,g,g, indexing='ij'), axis = -1)
@@ -27,45 +27,56 @@ def get_g2(L, npts):
 
 
 def to_g(f_r):
-    c_g = np.fft.fftn(f_r)*(1/f_r.size)
+    c_g = np.fft.fftn(f_r)*(1/len(f_r))
     return c_g
     
 
 def to_r(c_g):
-    f_r = np.fft.ifftn(c_g)*(c_g.size)
+    f_r = np.fft.ifftn(c_g)*(len(c_g))
     return f_r
 
 def inner_r(f,g):
-    inner_r = np.dot(np.conjugate(f), g).sum()*(1/f.size)
+    inner_r = np.sum(np.conjugate(f) * g * (1/f.size))
     return inner_r
     
 def inner_g(c,d):
-    inner_g = np.dot(np.conjugate(c), d).sum()
+    inner_g = np.sum(np.conjugate(c)* d)
     return inner_g
     
-N, L = 8, 10.0
-grid = make_grid(L, N)
-m = np.array([1, -2, 0])
-f = np.exp(1j * grid @ (2 * np.pi / L * m))     # a single plane wave
-c = to_g(f)
-print(np.round(abs(c[1, -2, 0]), 12))            # all weight in one coefficient ...
-print(np.round(abs(c).sum(), 12))                # ... and nowhere else
-print(to_g(3.0 * np.ones((N, N, N)))[0, 0, 0])   # constant function -> c_0 = its value
-rnd = np.random.default_rng(0).normal(size=(N, N, N))
-print(np.abs(to_r(to_g(rnd)) - rnd).max() < 1e-12)   # round trip
 
-rng = np.random.default_rng(0)
-f = rng.normal(size=(8, 8, 8)) + 1j * rng.normal(size=(8, 8, 8))
-g = rng.normal(size=(8, 8, 8)) + 1j * rng.normal(size=(8, 8, 8))
-print(np.round(inner_r(f, g), 10))
-print(np.round(inner_g(to_g(f), to_g(g)), 10))
+def gradient(f_r, L):
+    G_vec = make_gvec(L, f_r.shape[0])
+    G_vec = G_vec
+    c_g = to_g(f_r)
+    dr_f_r = [to_r(1j*c_g*G_vec[:,:,:,a] ) for a in range(3)]
+    
+    return np.stack(dr_f_r, axis=-1)
+
+def laplacian(f_r, L):
+    c_g = to_g(f_r)
+    G_vec_sq = get_g2(L, f_r.shape[0])
+    d2r2_f_r = to_r(-G_vec_sq*c_g).real
+    return d2r2_f_r
+
+def test_gaussian(L, N, sigma=0.8):
+    """Gaussian centred in the box and its exact gradient / Laplacian."""
+    r = make_grid(L, N) - L / 2
+    r2 = (r ** 2).sum(axis=-1)
+    f = np.exp(-r2 / (2 * sigma ** 2))
+    grad = -r / sigma ** 2 * f[..., None]
+    lap = (r2 / sigma ** 4 - 3 / sigma ** 2) * f
+    return f, grad, lap
 
 
 
 
 
 
+N = np.array([8, 12, 16, 24, 32, 64])
 
-
+for n in N:
+    f, grad_ex, lap_ex = test_gaussian(10.0, n)
+    print(f"{n}, gradient  max error: {np.abs(gradient(f, 10.0) - grad_ex).max():.1e}")
+    print(f"{n}, laplacian max error: {np.abs(laplacian(f, 10.0) - lap_ex).max():.1e}")
 
 
