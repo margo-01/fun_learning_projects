@@ -67,16 +67,17 @@ def test_gaussian(L, N, sigma=0.8):
     lap = (r2 / sigma ** 4 - 3 / sigma ** 2) * f
     return f, grad, lap
 
+def make_ecut_mask(L, npts, e_cut):
+    G_vec = make_gvec(L, npts)
+    R = np.sqrt(2*e_cut)
+    mask = [G_vec<R for a in range(3)]
+    return np.stack(np.array(mask), axis = -1)
+
+
+def suggest_npts(L, e_cut, npts):  
+    pass
 
 
 
-
-
-N = np.array([8, 12, 16, 24, 32, 64])
-
-for n in N:
-    f, grad_ex, lap_ex = test_gaussian(10.0, n)
-    print(f"{n}, gradient  max error: {np.abs(gradient(f, 10.0) - grad_ex).max():.1e}")
-    print(f"{n}, laplacian max error: {np.abs(laplacian(f, 10.0) - lap_ex).max():.1e}")
 
 
