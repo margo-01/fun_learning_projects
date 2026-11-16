@@ -1,6 +1,9 @@
 # grids and unit cell setup
 
 import numpy as np
+from dataclasses import dataclass
+
+
 
 class Cell:
     def __init__(self, L: float, npts: int):
@@ -15,12 +18,14 @@ class Cell:
         x = np.arange(0, npts)*d_x
         grid_array = np.stack(np.meshgrid(x,x,x, indexing='ij'), axis = -1)
         return grid_array
-
-
+    
+    def make_miller_indices(self, npts: int):
+        freq = np.fft.fftfreq(npts, 1/npts)
+        return np.round(freq * npts).astype(int)
     # fix the unit cell to be a cube of length L
 
     def make_gvec(self, L: float, npts: int):
-        freq = np.fft.fftfreq(npts, 1/npts)
+        freq = self.make_miller_indices(npts)
         g = (2*np.pi/L)*freq
         G_vec = np.stack(np.meshgrid(g,g,g, indexing='ij'), axis = -1)
         return G_vec
@@ -64,15 +69,6 @@ class Cell:
         d2r2_f_r = self.to_r(-G_vec_sq*c_g).real
         return d2r2_f_r
 
-    def test_gaussian(self, L, N, sigma=0.8):
-        """Gaussian centred in the box and its exact gradient / Laplacian."""
-        r = self.make_grid(L, N) - L / 2
-        r2 = (r ** 2).sum(axis=-1)
-        f = np.exp(-r2 / (2 * sigma ** 2))
-        grad = -r / sigma ** 2 * f[..., None]
-        lap = (r2 / sigma ** 4 - 3 / sigma ** 2) * f
-        return f, grad, lap
-
     def make_ecut_mask(self, L, npts, e_cut):
         G_vec = self.make_gvec(L, npts)
         R = np.sqrt(2*e_cut)
@@ -86,4 +82,34 @@ class Cell:
 
 
 
+class PWBasis:
+    def __init__(self, Cell):
+        self.cell = Cell
 
+    def build_basis(self, e_cut):
+        G_vec = self.cell.G_vec
+        mask = self.cell.make_ecut_mask(self.cell.L, self.cell.npts, e_cut)
+        basis = G_vec[mask]
+        return basis
+
+@dataclass
+class PWBasis:
+    cell: Cell
+    ecut: float
+    mask: np.ndarray      # bool (N,N,N): which FFT-grid points are in the sphere
+    miller: np.ndarray    # int  (npw,3)
+    gvec: np.ndarray      # float (npw,3)
+    g2: np.ndarray        # float (npw,)
+
+    @property
+    def npw(self):
+        return self.g2.size
+
+
+def make_pw_basis(cell: Cell, ecut: float) -> PWBasis:
+    mask = cell.make_ecut_mask(cell.L, cell.npts, ecut)
+    miller = cell.make_miller()[mask] 
+    gvec = cell.G_vec[mask] #booleian indexing mask applied to 3D array of G-vectors
+    g2 = cell.G_vec_sq[mask]
+    
+    return PWBasis(cell=cell, ecut=ecut, mask=mask, miller=miller, gvec=gvec, g2=g2)
