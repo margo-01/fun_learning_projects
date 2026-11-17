@@ -6,12 +6,14 @@ from dataclasses import dataclass
 
 
 class Cell:
-    def __init__(self, L: float, npts: int):
+    def __init__(self, L: float, npts: int, e_cut):
+        self.e_cut = e_cut
         self.L = L
         self.npts = npts
         self.grid = self.make_grid(L, npts)
         self.G_vec = self.make_gvec(L, npts)
         self.G_vec_sq = self.get_g2(L, npts)
+        self.mask = self.make_ecut_mask(L, npts, e_cut)
 
     def make_grid(self, L: float, npts: int):
         d_x = L/npts
@@ -72,7 +74,7 @@ class Cell:
     def make_ecut_mask(self, L, npts, e_cut):
         G_vec = self.make_gvec(L, npts)
         R = np.sqrt(2*e_cut)
-        mask = [G_vec<R for a in range(3)]
+        mask = np.linalg.norm(G_vec, axis=-1) <= R
         return np.stack(np.array(mask), axis = -1)
 
 
@@ -81,35 +83,27 @@ class Cell:
 
 
 
-
-class PWBasis:
-    def __init__(self, Cell):
-        self.cell = Cell
-
-    def build_basis(self, e_cut):
-        G_vec = self.cell.G_vec
-        mask = self.cell.make_ecut_mask(self.cell.L, self.cell.npts, e_cut)
-        basis = G_vec[mask]
-        return basis
-
 @dataclass
 class PWBasis:
     cell: Cell
-    ecut: float
-    mask: np.ndarray      # bool (N,N,N): which FFT-grid points are in the sphere
-    miller: np.ndarray    # int  (npw,3)
-    gvec: np.ndarray      # float (npw,3)
-    g2: np.ndarray        # float (npw,)
-
+    e_cut: float
+    mask: np.ndarray      
+    miller: np.ndarray    
+    gvec: np.ndarray
+    g2: np.ndarray     
+    
     @property
     def npw(self):
         return self.g2.size
 
 
-def make_pw_basis(cell: Cell, ecut: float) -> PWBasis:
-    mask = cell.make_ecut_mask(cell.L, cell.npts, ecut)
-    miller = cell.make_miller()[mask] 
+def make_pw_basis(cell: Cell) -> PWBasis:
+    mask = cell.make_ecut_mask(cell.L, cell.npts, cell.e_cut)
+    miller = cell.make_miller_indices(cell.npts) 
     gvec = cell.G_vec[mask] #booleian indexing mask applied to 3D array of G-vectors
-    g2 = cell.G_vec_sq[mask]
+    g2 = (gvec ** 2).sum(axis=-1)
     
-    return PWBasis(cell=cell, ecut=ecut, mask=mask, miller=miller, gvec=gvec, g2=g2)
+    return PWBasis(cell=cell, e_cut=cell.e_cut, mask=mask, miller=miller, gvec=gvec, g2=g2)
+
+
+
