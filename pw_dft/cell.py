@@ -23,7 +23,7 @@ class Cell:
     
     def make_miller_indices(self, npts: int):
         freq = np.fft.fftfreq(npts, 1/npts)
-        return np.round(freq * npts).astype(int)
+        return np.round(freq).astype(int)
     # fix the unit cell to be a cube of length L
 
     def make_gvec(self, L: float, npts: int):
