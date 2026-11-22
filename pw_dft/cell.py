@@ -23,13 +23,14 @@ class Cell:
     
     def make_miller_indices(self, npts: int):
         freq = np.fft.fftfreq(npts, 1/npts)
-        return np.round(freq).astype(int)
-    # fix the unit cell to be a cube of length L
+        freq =  np.round(freq).astype(int)
+        miller_grid = np.stack(np.meshgrid(freq,freq,freq, indexing='ij'), axis = -1)
+        return miller_grid
+    
 
     def make_gvec(self, L: float, npts: int):
         freq = self.make_miller_indices(npts)
-        g = (2*np.pi/L)*freq
-        G_vec = np.stack(np.meshgrid(g,g,g, indexing='ij'), axis = -1)
+        G_vec = (2*np.pi/L)*freq
         return G_vec
         
 
