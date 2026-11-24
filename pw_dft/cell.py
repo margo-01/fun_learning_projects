@@ -41,12 +41,12 @@ class Cell:
 
 
     def to_g(self, f_r):
-        c_g = np.fft.fftn(f_r)*(1/len(f_r))
+        c_g = np.fft.fftn(f_r)*(1/f_r.size)
         return c_g
         
 
     def to_r(self, c_g):
-        f_r = np.fft.ifftn(c_g)*(len(c_g))
+        f_r = np.fft.ifftn(c_g)*(c_g.size)
         return f_r
 
     def inner_r(self, f, g):
@@ -100,7 +100,7 @@ class PWBasis:
 
 def make_pw_basis(cell: Cell) -> PWBasis:
     mask = cell.make_ecut_mask(cell.L, cell.npts, cell.e_cut)
-    miller = cell.make_miller_indices(cell.npts) 
+    miller = cell.make_miller_indices(cell.npts)[mask]
     gvec = cell.G_vec[mask] #booleian indexing mask applied to 3D array of G-vectors
     g2 = (gvec ** 2).sum(axis=-1)
     
